@@ -40,3 +40,10 @@ head(loan_df_subset)
 write.csv(loan_df_subset, file = 'loan_df_subset.csv')
 ```
 
+```{r}
+ggplot(aes(x=Term), data = loan_df_subset) +
+    geom_histogram()
+
+```
+
+
