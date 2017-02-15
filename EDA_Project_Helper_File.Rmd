@@ -47,3 +47,34 @@ ggplot(aes(x=Term), data = loan_df_subset) +
 ```
 
 
+```{r}
+head(loan_df_subset)
+```
+
+
+```{r fig.height = 5, fig.width = 7}
+ggplot(aes(x=LoanStatus), data = loan_df_subset) +
+    geom_bar() +
+    #rotate x axis labels 90 degrees
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+#to prevent code from showing, enter ^ those commands
+ggplot(aes(x=BorrowerAPR), data = loan_df_subset) +
+    geom_histogram()
+```
+
+
+```{r}
+ggplot(aes(x = EmploymentStatus), data = loan_df_subset) +
+    geom_histogram(stat = 'count')
+```
+
+
+
+
+
+
+
+
