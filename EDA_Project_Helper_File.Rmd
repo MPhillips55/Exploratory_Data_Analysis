@@ -27,7 +27,7 @@ head(loan_df)
 ```{r}
 #subset data
 loan_df_subset <- subset(loan_df, select = c('ListingNumber', 'ListingCreationDate', 'CreditGrade', 
-                                             'Term', 'LoanStatus', 'ClosedDate', 'BorrowerAPR', 'BorrowerRate',
+                                             'Term', 'LoanStatus', 'ClosedDate', 'BorrowerAPR', 'BorrowerRate', 'LenderYield',
                                              'ProsperScore', 'Occupation', 'EmploymentStatus', 'CreditScoreRangeLower',
                                              'CreditScoreRangeUpper', 'OpenRevolvingMonthlyPayment', 
                                              'BankcardUtilization', 'AvailableBankcardCredit', 'IncomeRange',
@@ -72,6 +72,9 @@ ggplot(aes(x = EmploymentStatus), data = loan_df_subset) +
 ```
 
 
+```{r}
+summary(loan_df_subset$ListingCreationDate)
+```
 
 
 
