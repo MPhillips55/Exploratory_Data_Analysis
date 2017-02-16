@@ -29,12 +29,58 @@ dim(loan_df_subset)
 str(loan_df_subset)
 ```
 
-```{r}
+Our dataset contains 21 variables (plus an index, labeled 'X'), and 113,937 observations.
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+
+```
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+ggplot(aes(x = EmploymentStatus), data = subset(loan_df_subset, !is.na(EmploymentStatus))) +
+    geom_histogram(binwidth = 0.25, stat = 'count', color = 'black', fill = '#F79420') +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+As expected, most people are employed. It is surprising some people received loans by not listing any employment status.
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+ggplot(aes(x = CreditGrade), data = loan_df_subset) +
+    geom_histogram(binwidth = 0.25, stat = 'count', color = 'black', fill = '#F79420') +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+As soon as I saw this histogram I had to find a reason why more than 80,000 loans were not given a credit grade - the Variable Definitions explain that only listings from pre-2009 were given a Credit Grade.
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+ggplot(aes(x = IncomeRange), data = loan_df_subset) +
+    geom_histogram(binwidth = 0.25, stat = 'count', color = 'black', fill = '#F79420') +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+This chart shows a concentration around $50,000, which is very close to the median household income estimated by the Federal Reserve fo 2015. For a bit more detail, lets look at some descriptive statistics for the variable, "StatedMonthlyIncome".
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+summary(loan_df_subset$StatedMonthlyIncome)
+```
+Someone apparently has a monthly income of almost 2 million dollars and is asking for a loan. Let's look at that entry from the dataframe.
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+income_outlier <- subset(loan_df_subset, StatedMonthlyIncome > 1000000)
+income_outlier
 
 ```
 
 
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+loan_df_subset$meanCreditScore <- (loan_df_subset$CreditScoreRangeLower + loan_df_subset$CreditScoreRangeUpper) / 2
+ggplot(aes(x = meanCreditScore), data = loan_df_subset) +
+    geom_histogram() +
+    xlab('Mean Credit Score')
+    
+```
 
+```{r}
+loan_df_subset$meanCreditScore <- (loan_df_subset$CreditScoreRangeLower + loan_df_subset$CreditScoreRangeUpper) / 2
+head(loan_df_subset)
+with(loan_df_subset, )
+```
 
 
 
