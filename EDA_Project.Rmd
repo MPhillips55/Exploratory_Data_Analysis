@@ -16,7 +16,7 @@ library(dplyr)
 loan_df_subset <- read.csv('loan_df_subset.csv')
 ```
 
-This report explores a dataset containing approximately 110,000 loans issued by Prosper. Prosper describes itself as America's first "marketplace lending platform", where a person posts to the website the amount of money they are seeking and the reason, and a private investor can loan that amount plus interest if they choose. 
+> This report explores a dataset containing approximately 110,000 loans issued by Prosper. Prosper describes itself as America's first "marketplace lending platform", where a person posts to the website the amount of money they are seeking and the reason, and a private investor can loan that amount plus interest if they choose. 
 
 ## Univariate Plots
 
@@ -29,59 +29,57 @@ dim(loan_df_subset)
 str(loan_df_subset)
 ```
 
-Our dataset contains 21 variables (plus an index, labeled 'X'), and 113,937 observations.
-
-```{r echo=FALSE, message=FALSE,warning=FALSE}
-
-```
+> Our dataset contains 21 variables (plus an index, labeled 'X'), and 113,937 observations.
 
 ```{r echo=FALSE, message=FALSE,warning=FALSE}
 ggplot(aes(x = EmploymentStatus), data = subset(loan_df_subset, !is.na(EmploymentStatus))) +
     geom_histogram(binwidth = 0.25, stat = 'count', color = 'black', fill = '#F79420') +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
-As expected, most people are employed. It is surprising some people received loans by not listing any employment status.
+
+> As expected, most people are employed. It is surprising some people received loans by not listing any employment status.
 
 ```{r echo=FALSE, message=FALSE,warning=FALSE}
 ggplot(aes(x = CreditGrade), data = loan_df_subset) +
     geom_histogram(binwidth = 0.25, stat = 'count', color = 'black', fill = '#F79420') +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
-As soon as I saw this histogram I had to find a reason why more than 80,000 loans were not given a credit grade - the Variable Definitions explain that only listings from pre-2009 were given a Credit Grade.
+
+> As soon as I saw this histogram I had to find a reason why more than 80,000 loans were not given a credit grade - the Variable Definitions explain that only listings from pre-2009 were given a Credit Grade.
 
 ```{r echo=FALSE, message=FALSE,warning=FALSE}
 ggplot(aes(x = IncomeRange), data = loan_df_subset) +
     geom_histogram(binwidth = 0.25, stat = 'count', color = 'black', fill = '#F79420') +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
-This chart shows a concentration around $50,000, which is very close to the median household income estimated by the Federal Reserve fo 2015. For a bit more detail, lets look at some descriptive statistics for the variable, "StatedMonthlyIncome".
+
+> This chart shows a concentration around $50,000, which is very close to the median household income estimated by the Federal Reserve fo 2015. For a bit more detail, lets look at some descriptive statistics for the variable, "StatedMonthlyIncome".
 
 ```{r echo=FALSE, message=FALSE,warning=FALSE}
 summary(loan_df_subset$StatedMonthlyIncome)
 ```
 
-Wow! Someone apparently has a monthly income of almost 2 million dollars and is asking for a loan. Let's look at that entry from the dataframe.
+> Wow! Someone apparently has a monthly income of almost 2 million dollars and is asking for a loan. Let's look at that entry from the dataframe.
 
 ```{r echo=FALSE, message=FALSE,warning=FALSE}
 income_outlier <- subset(loan_df_subset, StatedMonthlyIncome > 1000000)
 income_outlier[, c("ListingNumber", "EmploymentStatus", "StatedMonthlyIncome"), drop = FALSE]
-
 ```
 
-He or she states that they are self-employed. I suppose its not impossible for this obvious outlier to be a data entry error. Are there any other data points above $500,000?
+> He or she states that they are self-employed. I suppose its not impossible for this obvious outlier to be a data entry error. Are there any other data points above $500,000?
 
 ```{r }
 sum(loan_df_subset$StatedMonthlyIncome > 500000)
 ```
 
-I want to take a look at the listing for the other point as well.
+> I want to take a look at the listing for the other point as well.
 
 ```{r echo=FALSE, message=FALSE,warning=FALSE}
 income_outlier_fivehundred <- subset(loan_df_subset, StatedMonthlyIncome > 500000 & ListingNumber != 560783)
 income_outlier_fivehundred[, c("ListingNumber", "EmploymentStatus", "StatedMonthlyIncome"), drop = FALSE]
 ```
 
-The other person is also self-employed. Interesting, again, not totally unreasonable.
+> The other person is also self-employed. Interesting, again, not totally unreasonable.
 
 
 ```{r echo=FALSE, message=FALSE,warning=FALSE}
@@ -92,7 +90,7 @@ ggplot(aes(x = meanCreditScore), data = loan_df_subset) +
     
 ```
 
-Most of the Credit Scores are between 425 and 875. Lets zoom in on that region.
+> Most of the Credit Scores are between 425 and 875. Lets zoom in on that region.
 
 ```{r echo=FALSE, message=FALSE,warning=FALSE}
 ggplot(aes(x = meanCreditScore), data = loan_df_subset) +
@@ -101,7 +99,7 @@ ggplot(aes(x = meanCreditScore), data = loan_df_subset) +
     xlab('Mean Credit Score')
 ```
 
-We can see the negative skew of this graph, with most people falling within the same 'bucket' of credit scores. I'm curious how many exactly are under 425.
+> We can see the negative skew of this graph, with most people falling within the same 'bucket' of credit scores. I'm curious how many exactly are under 425.
 
 ```{r echo=FALSE, message=FALSE,warning=FALSE}
 credit_under_fourhundred <- subset(loan_df_subset, meanCreditScore < 425)
@@ -109,7 +107,7 @@ nrow(credit_under_fourhundred)
 
 ```
 
-Out of 113,937 possible loans, only 134 fall under a 425 Credit Score.
+> Out of 113,937 possible loans, only 134 fall under a 425 Credit Score.
 
 
 
