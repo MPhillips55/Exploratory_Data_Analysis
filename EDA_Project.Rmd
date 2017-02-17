@@ -59,28 +59,58 @@ This chart shows a concentration around $50,000, which is very close to the medi
 ```{r echo=FALSE, message=FALSE,warning=FALSE}
 summary(loan_df_subset$StatedMonthlyIncome)
 ```
-Someone apparently has a monthly income of almost 2 million dollars and is asking for a loan. Let's look at that entry from the dataframe.
+
+Wow! Someone apparently has a monthly income of almost 2 million dollars and is asking for a loan. Let's look at that entry from the dataframe.
 
 ```{r echo=FALSE, message=FALSE,warning=FALSE}
 income_outlier <- subset(loan_df_subset, StatedMonthlyIncome > 1000000)
-income_outlier
+income_outlier[, c("ListingNumber", "EmploymentStatus", "StatedMonthlyIncome"), drop = FALSE]
 
 ```
+
+He or she states that they are self-employed. I suppose its not impossible for this obvious outlier to be a data entry error. Are there any other data points above $500,000?
+
+```{r }
+sum(loan_df_subset$StatedMonthlyIncome > 500000)
+```
+
+I want to take a look at the listing for the other point as well.
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+income_outlier_fivehundred <- subset(loan_df_subset, StatedMonthlyIncome > 500000 & ListingNumber != 560783)
+income_outlier_fivehundred[, c("ListingNumber", "EmploymentStatus", "StatedMonthlyIncome"), drop = FALSE]
+```
+
+The other person is also self-employed. Interesting, again, not totally unreasonable.
 
 
 ```{r echo=FALSE, message=FALSE,warning=FALSE}
 loan_df_subset$meanCreditScore <- (loan_df_subset$CreditScoreRangeLower + loan_df_subset$CreditScoreRangeUpper) / 2
 ggplot(aes(x = meanCreditScore), data = loan_df_subset) +
-    geom_histogram() +
+    geom_histogram(fill = '#F79420') +
     xlab('Mean Credit Score')
     
 ```
 
-```{r}
-loan_df_subset$meanCreditScore <- (loan_df_subset$CreditScoreRangeLower + loan_df_subset$CreditScoreRangeUpper) / 2
-head(loan_df_subset)
-with(loan_df_subset, )
+Most of the Credit Scores are between 425 and 875. Lets zoom in on that region.
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+ggplot(aes(x = meanCreditScore), data = loan_df_subset) +
+    geom_histogram(fill = '#F79420') +
+    scale_x_continuous(limits = c(425, 875), breaks = seq(425, 875, 25)) +
+    xlab('Mean Credit Score')
 ```
+
+We can see the negative skew of this graph, with most people falling within the same 'bucket' of credit scores. I'm curious how many exactly are under 425.
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+credit_under_fourhundred <- subset(loan_df_subset, meanCreditScore < 425)
+nrow(credit_under_fourhundred)
+
+```
+
+Out of 113,937 possible loans, only 134 fall under a 425 Credit Score.
+
 
 
 
