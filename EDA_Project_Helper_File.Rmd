@@ -26,7 +26,7 @@ head(loan_df)
 
 ```{r}
 #subset data
-loan_df_subset <- subset(loan_df, select = c('ListingNumber', 'ListingCreationDate', 'CreditGrade', 
+loan_df_subset <- subset(loan_df, select = c('ListingNumber', 'ListingCreationDate', 'CreditGrade', 'ProsperRating..Alpha.',
                                              'Term', 'LoanStatus', 'ClosedDate', 'BorrowerAPR', 'BorrowerRate', 'LenderYield',
                                              'ProsperScore', 'Occupation', 'EmploymentStatus', 'CreditScoreRangeLower',
                                              'CreditScoreRangeUpper', 'OpenRevolvingMonthlyPayment', 

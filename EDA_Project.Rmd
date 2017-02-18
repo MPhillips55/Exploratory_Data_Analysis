@@ -12,11 +12,14 @@ knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
 library(tidyr)
 library(dplyr)
+library(gridExtra)
+library(lubridate)
+library(scales)
 
 loan_df_subset <- read.csv('loan_df_subset.csv')
 ```
 
-> This report explores a dataset containing approximately 110,000 loans issued by Prosper. Prosper describes itself as America's first "marketplace lending platform", where a person posts to the website the amount of money they are seeking and the reason, and a private investor can loan that amount plus interest if they choose. 
+> This report explores a dataset containing approximately 110,000 loans issued by Prosper. Prosper describes itself as America's first "marketplace lending platform", where a person posts the amount of money they are seeking, and a private investor can then fund the loan (expecting a return with interest) if they choose. 
 
 ## Univariate Plots
 
@@ -34,7 +37,8 @@ str(loan_df_subset)
 ```{r echo=FALSE, message=FALSE,warning=FALSE}
 ggplot(aes(x = EmploymentStatus), data = subset(loan_df_subset, !is.na(EmploymentStatus))) +
     geom_histogram(binwidth = 0.25, stat = 'count', color = 'black', fill = '#F79420') +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    xlab("Employment Status")
 ```
 
 > As expected, most people are employed. It is surprising some people received loans by not listing any employment status.
@@ -42,7 +46,8 @@ ggplot(aes(x = EmploymentStatus), data = subset(loan_df_subset, !is.na(Employmen
 ```{r echo=FALSE, message=FALSE,warning=FALSE}
 ggplot(aes(x = CreditGrade), data = loan_df_subset) +
     geom_histogram(binwidth = 0.25, stat = 'count', color = 'black', fill = '#F79420') +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    xlab("Credit Grade")
 ```
 
 > As soon as I saw this histogram I had to find a reason why more than 80,000 loans were not given a credit grade - the Variable Definitions explain that only listings from pre-2009 were given a Credit Grade.
@@ -50,7 +55,8 @@ ggplot(aes(x = CreditGrade), data = loan_df_subset) +
 ```{r echo=FALSE, message=FALSE,warning=FALSE}
 ggplot(aes(x = IncomeRange), data = loan_df_subset) +
     geom_histogram(binwidth = 0.25, stat = 'count', color = 'black', fill = '#F79420') +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    xlab("Income Range")
 ```
 
 > This chart shows a concentration around $50,000, which is very close to the median household income estimated by the Federal Reserve fo 2015. For a bit more detail, lets look at some descriptive statistics for the variable, "StatedMonthlyIncome".
@@ -81,13 +87,18 @@ income_outlier_fivehundred[, c("ListingNumber", "EmploymentStatus", "StatedMonth
 
 > The other person is also self-employed. Interesting, again, not totally unreasonable.
 
+> Next, I want to look at the credit scores of the loan applicants.
 
 ```{r echo=FALSE, message=FALSE,warning=FALSE}
 loan_df_subset$meanCreditScore <- (loan_df_subset$CreditScoreRangeLower + loan_df_subset$CreditScoreRangeUpper) / 2
+summary(loan_df_subset$meanCreditScore)
+```
+
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
 ggplot(aes(x = meanCreditScore), data = loan_df_subset) +
     geom_histogram(fill = '#F79420') +
     xlab('Mean Credit Score')
-    
 ```
 
 > Most of the Credit Scores are between 425 and 875. Lets zoom in on that region.
@@ -104,10 +115,168 @@ ggplot(aes(x = meanCreditScore), data = loan_df_subset) +
 ```{r echo=FALSE, message=FALSE,warning=FALSE}
 credit_under_fourhundred <- subset(loan_df_subset, meanCreditScore < 425)
 nrow(credit_under_fourhundred)
-
 ```
 
 > Out of 113,937 possible loans, only 134 fall under a 425 Credit Score.
+
+> I also want to get a sense of the variance between the lending rates described in the dataset.
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+p1 <- ggplot(aes(x = BorrowerAPR), data = loan_df_subset) +
+    geom_histogram(color = 'red', fill = '#F79420') +
+    xlab("Borrower APR")
+p2 <- ggplot(aes(x = BorrowerRate), data = loan_df_subset) +
+    geom_histogram(color = 'black', fill = '#F79420') +
+    xlab("Borrower Rate")
+p3 <- ggplot(aes(x = LenderYield), data = loan_df_subset) +
+    geom_histogram(color = 'blue', fill = '#F79420') +
+    xlab("Lender Yield")
+grid.arrange(p1, p2, p3, ncol = 1)
+```
+
+> Borrower APR is the rate on the total amount of money an applicant owes, Borrower Rate is the rate only on the principle money (not including fees owed to Prosper), and the Lender Yield is the return rate the person lending the money can expect. Overall, the spread of interest rates is a little more uniform than I had expected. 
+
+## Univariate Analysis
+
+### What is the structure of your dataset?
+
+> There are 113,937 different loans described by 23 variables. Some observations thus far include the average income for loan applicants falls within the median income range for the average American, the vast majority of loan applicants are employed, and the mean credit score for the loan applicants is 691. One definite surprise was the outliers amongst the examined monthly incomes.
+
+### What is/are the main feature(s) of interest in the dataset?
+
+> The main feature of interest to me is the relationship between variables such as income or credit score and the eventual credit rate the applicant received. Some of these factors are credit score, employment, occupation, and income range/monthly income.
+
+### What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
+
+> There are some variables that have not been examined yet that I am curious about. Variables such as credit card available balance, percentage of credit card utilization, and whether or not a person's stated income being verifiable or not had any impact on loan rates.
+
+### Did you create any new variables from existing variables in the dataset?
+
+> Yes, I created the mean credit score variable from upper and lower bound credit scores to have one summary statistic for the range. I also did some transformation on the whole dataset after examining the variable dictionary, narrowing it down to only the variables that interested me.
+
+### Of the features you investigated, were there any unusual distributions? Did you perform any operations on the data to tidy, adjust, or change the form of the data?
+
+> I was surprised by a few things while examing the data, particularly how a majority of applicants were not given a credit rating, and the outliers amongst the positive end of the monthly income graph. Both irregularities were eventually explained to the point that no further investigation, or cleaning of data, was required. 
+
+> I did perform some quick data manipulations to look at specific rows, and to add a new variable. I also used subsets in several instances to narrow the focus down to specific points of interest.
+
+## Bivariate Plots
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+correlation_df <-loan_df_subset %>%
+    select(BorrowerAPR, BankcardUtilization, AvailableBankcardCredit, DebtToIncomeRatio, meanCreditScore, StatedMonthlyIncome)
+cor_loan_df <- cor(correlation_df, use='complete')
+round(cor_loan_df, 2)
+```
+
+> My main point of interest is which factors have the greatest impact on Borrower APR. I chose Borrower APR has my main indicator of loan rate because it is a more realistic indicator of the loan rate than Borrower Rate (which does not include fees passed along by the lending institution) or Lender Yield, which is a measure of the return a lender can reasonably expect. The correlations above show that out of the listed variables, Mean Credit Score is most closely correlated with APR, with the other variables coming in at somewhat lower correlations. 
+
+> To get an idea of how APR is distributed over time regardless of any outside variables lets look at an APR vs. Time plot. 
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+ggplot(aes(x = meanCreditScore, y = BorrowerAPR), data = subset(loan_df_subset, meanCreditScore > 425)) +
+    geom_point() +
+    xlab('Mean Credit Score') +
+    ylab("Borrower APR") 
+```
+
+> It looks like the credit scores are falling in buckets of values, and it is hard to discern a trend here. I will introduce alpha, jitter, and a line of best fit to hopefully see more of the story.
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+ggplot(aes(x = meanCreditScore, y = BorrowerAPR), data = subset(loan_df_subset, meanCreditScore > 425)) +
+    geom_point(alpha = 0.04, color = '#F79420', position = 'jitter') +
+    geom_smooth(method = 'lm', color = 'red') +
+    xlab('Mean Credit Score') +
+    ylab("Borrower APR") 
+```
+
+> From this adjusted graph we can see a fairly concrete visualization of the downward trend between Mean Credit Score and Borrower APR. The red line represents the line of best fit for the scatterplot. An alpha of .04 was used to see where the points are concentrated, and jitter was added to introduce some noise to the data.
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+ggplot(aes(x = StatedMonthlyIncome, y = BorrowerAPR), data = loan_df_subset) +
+    geom_point() +
+    xlab('Stated Monthly Income') +
+    ylab("Borrower APR") 
+
+```
+
+> Next I want to look at Stated Monthly Income vs. Borrower APR. The above first go was not what I had in mind. Those outliers are skewing the plot. I suspect most of the applicants had a monthly income of under $10,000. First, I want to check that this is the case.
+
+```{r}
+nrow(subset(loan_df_subset, StatedMonthlyIncome <= 10000))
+```
+
+> Out of 113,937 total rows, 104,157 have a monthly income under or equal to $10,000. Lets use that subset to try the scatter plot again.
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+ggplot(aes(x = StatedMonthlyIncome, y = BorrowerAPR), data = subset(loan_df_subset, StatedMonthlyIncome <= 10000)) +
+    geom_point() +
+    xlab('Stated Monthly Income') +
+    ylab("Borrower APR") 
+
+```
+
+> This is a little better, but suffers from overplotting. Lets introduce an alpha to try to see a trend.
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+ggplot(aes(x = StatedMonthlyIncome, y = BorrowerAPR), data = subset(loan_df_subset, StatedMonthlyIncome <= 10000)) +
+    geom_point(alpha = 0.03, color = '#F79420') +
+    geom_smooth(method = 'lm', color = 'red') +
+    xlab('Stated Monthly Income') +
+    ylab("Borrower APR") 
+
+```
+
+> I think I'll take out $0, and $10,000 also as there is an obvious concentration of data points there.
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+ggplot(aes(x = StatedMonthlyIncome, y = BorrowerAPR), data = subset(loan_df_subset, StatedMonthlyIncome < 10000 & StatedMonthlyIncome != 0)) +
+    geom_point(alpha = 0.05, color = '#F79420') +
+    geom_smooth(method = 'lm', color = 'red') +
+    xlab('Stated Monthly Income') +
+    ylab("Borrower APR") 
+
+```
+
+> From the above plot we can see that the slope of the line of best fit is not as steep as from the previous graph above of mean credit rating vs. Borrower APR. This aligns with the correlations at the top of the section which show that mean credit rating is more closely correlated with Borrower APR than Monthly Income is. 
+
+> This plot also shows clearly demarcated vertical lines at certain monthly incomes. This is likely due to the fact that loan applicants enter this amount with no clear validation, and some rounding of the figure is expected. A person might make $2,800 and round up to $3,000 for example.
+
+> For the next plot I want to look at Prosper Rating (alpha) vs. Borrower APR. Prosper Rating is a ranking of the risk associated with a borrower. 'AA' is the ranking for the lowest risk, while 'HR' represents the highest risk. This rating was only implemented after 2009. For the purposes of this exploration, I am okay with this limitation. I am more interested in the recent trends than ones dating back to the start of the dataset, which happens to be more than a decade. For the purposes of the below plot, I will omit 'NA' values. 
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+loan_df_subset$ProsperRating..Alpha. <- factor(loan_df_subset$ProsperRating..Alpha., levels = c('AA', 'A', 'B', 'C', 'D', 'E', 'HR'))
+
+ggplot(aes(x = ProsperRating..Alpha., y = BorrowerAPR), data = na.omit(loan_df_subset)) +
+    geom_boxplot() +
+    xlab("Prosper Rating - Alpha") +
+    ylab("Borrower APR")
+
+```
+
+> From the above box plot we can see that median Borrower APR goes down as the Prosper Rating measuring loan risk goes up. There are some outliers amongst the data as would be expected. The Prosper Rating is not the only factor that goes in to assigning an APR, but it does show a relationship between the rating and eventual APR as a general rule.
+
+> Next, I want to take a look at the summary statistics for the Prosper Rating.
+
+```{r}
+tapply(loan_df_subset$BorrowerAPR, loan_df_subset$ProsperRating..Alpha., summary)
+```
+
+> The general trend visible in the box plot is also visible here, with the mean borrower APR trending downward as the credit rating gets better (less risky).
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+ggplot(aes(x = LoanStatus, y = BorrowerAPR), data = subset(loan_df_subset, !is.na(LoanStatus))) +
+    geom_boxplot() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    xlab("Loan Status") +
+    ylab("Borrower APR")
+
+```
+
+> This box plot is another way to look at correlations to Borrower APR. The loan status describes the state of the loan. It appears that the assigned APR was slightly higher overall for loans whose payments are past due compared to loans that are paid off or otherwise current.
+
+
+
 
 
 
