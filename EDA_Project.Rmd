@@ -265,7 +265,7 @@ tapply(loan_df_subset$BorrowerAPR, loan_df_subset$ProsperRating..Alpha., summary
 > The general trend visible in the box plot is also visible here, with the mean borrower APR trending downward as the credit rating gets better (less risky).
 
 ```{r echo=FALSE, message=FALSE,warning=FALSE}
-ggplot(aes(x = LoanStatus, y = BorrowerAPR), data = subset(loan_df_subset, !is.na(LoanStatus))) +
+ggplot(aes(x = LoanStatus, y = BorrowerAPR, fill = LoanStatus), data = subset(loan_df_subset, !is.na(LoanStatus))) +
     geom_boxplot() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     xlab("Loan Status") +
@@ -275,10 +275,97 @@ ggplot(aes(x = LoanStatus, y = BorrowerAPR), data = subset(loan_df_subset, !is.n
 
 > This box plot is another way to look at correlations to Borrower APR. The loan status describes the state of the loan. It appears that the assigned APR was slightly higher overall for loans whose payments are past due compared to loans that are paid off or otherwise current.
 
+## Bivariate Analysis
+
+### What are some of the relationships you observed in this part of the investigation?
+
+> I looked at how different variables related to Borrower APR. I saw clear indications of trends using both a correlation table, and plots. The most highly correlated variable with Borrower Apr was Mean Credit Score, this makes sense because it is the most complete picture of a person's credit history, and in some cases includes other variables when calculating the score (such as credit card history). I also looked at other factors including Loan Status and Prosper Rating to see if these factors had any relationship to Borrower APR.
+
+### Did you observe any interesting relationships between the other features of the dataset?
+
+> I was not originally going to explore the Loan Status or Prosper Rating variables, but then I had a thought that maybe they could be used to predict either credit risk or (for a person requesting a loan) their eventual assigned APR. I think that this would be a valid exploration, particularly for Prosper Rating as that relationship appeared quite strong.
+
+### What was the strongest relationship you found?
+
+> The strongest relationship that I found was between Mean Credit Score and Borrower APR. As mentioned in the previous question, I think this relationship would be a decent starting point for a borrower or lender to examine the rates offered and to see if they are in line with previous loans issued through Prosper, and also could be used to estimate what rate they might eventually receive.
+
+## Multivariate Plots
+
+> The first area of the dataset I want to look at in this section is the Stated Monthly Income vs. Borrower APR, with a distinction made between whether or not the applicants income was verified. 
 
 
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+ggplot(aes(x = meanCreditScore, y = BorrowerAPR, color = IncomeVerifiable), data = subset(loan_df_subset, meanCreditScore > 425)) +
+    geom_point(alpha = 0.2, position = 'jitter') +
+    scale_color_discrete(limits = levels(loan_df_subset$IncomeVerifiable)) +
+    xlab('Mean Credit Score') +
+    ylab("Borrower APR") 
+    
+```
+
+> This result is interesting. It appears that applicants with unverified income received higher interest rates. I am going to take a slight detour and look at summary statistics for each factor of Income Verifiable.
 
 
+```{r }
+#create a new dataframe holding only the variables of interest
+income_df <- loan_df_subset %>%
+    select(ListingNumber, BorrowerAPR, IncomeVerifiable)
+
+#create new dataframes to run the summary off of, one for the data points where income could be verified, 
+#and one for data poins where it could not
+income_df_true <- subset(income_df, IncomeVerifiable == 'True')
+income_df_false <- subset(income_df, IncomeVerifiable == 'False')
+
+#run the summary for 'false' values
+tapply(income_df_false$BorrowerAPR, income_df_false$IncomeVerifiable, summary)
+```
+
+```{r }
+#run the summary for 'true' values
+tapply(income_df_true$BorrowerAPR, income_df_true$IncomeVerifiable, summary)
+```
+
+> The inferences made from the scatterplot were supported by descriptive statistics. The mean and median Borrower APR for applicants who could not have their income verified was higher than for applicants who did have their income verified.
+
+> Next, lets look at the mean credit score vs. Borrower APR, with colors highlighting a variable not yet examined - Occupation. There are 68 different occupations in the dataset so first I'll subset it down to the ones I am most interested in.
+
+```{r }
+#create a new dataframe holding only the variables of interest
+occupation_df <- loan_df_subset %>%
+    select(ListingNumber, ProsperRating..Alpha., BorrowerAPR, Occupation, meanCreditScore)
+
+#subset the dataframe to only the occupations of interest
+occupation_df <- subset(occupation_df, (Occupation == 'Accountant/CPA' | Occupation =='Waiter/Waitress' | 
+                            Occupation =='Teacher'))
+```
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+ggplot(aes(x = meanCreditScore, y = BorrowerAPR, color = Occupation), data = subset(occupation_df, meanCreditScore > 425)) +
+    geom_point(alpha = 0.4, position = 'jitter') +
+    xlab('Mean Credit Score') +
+    ylab('Borrower APR')
+```
+
+> Wow, that is not really at all what I expected. The general trend seen in the whole dataset of APR going down as credit score goes up continues here, what was unexpected was the mostly uniform distribution for each occupation in the plot. There are people of every profession spread throughout the credit score range. In a broad sense this is intuitive, just because a person is an accountant doesn't mean they necessarily have a good credit score. I was expecting a bit more of a separation between the occupations, I guess based on my own preconceptions of each labor group. 
+
+> Lets use the occupations again to look at the Prosper Ratings given to each group.
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+ggplot(aes(x = ProsperRating..Alpha., y = BorrowerAPR, color = ProsperRating..Alpha.), data = subset(occupation_df, 
+                                                                      meanCreditScore > 425 & !is.na(ProsperRating..Alpha.))) +
+    geom_point(alpha = 0.5, position = 'jitter') +
+    facet_wrap(~ Occupation) +
+    xlab('Prosper Rating') +
+    ylab("Borrower APR")
+```
+
+> In this plot we can see comparitively less 'AA' ratings, which represent the least risk loans, given to Waiters or Waitresses compared to Accountants and Teachers. We can also see each of the occupations contains outliers in the higher risk ratings as was indicated by the previous plot. The general distribution of ratings is otherwise very, very similar. 
+
+## MultiVariate Analysis
+
+### What were some of the relationships observed in this part of the investigation?
+
+> I looked at the Income Verifiable variable from the dataset and examined if it had any effect on APR overall. From my investigation, it did have an overall higher mean APR when income was not verified versus when it could be. This mostly fell in line with my expectations. More interesting to me as it was not at all what I expected was the Occupation plots that measured credit score, and Prosper Rating vs. Borrower APR. I think I let my prior preconceptions color my views here, and in fact hadn't used the Occupation variable at all through this investigation as I thought I knew what to results it would show. The actual data and plots were much more uniform than I had anticipated. 
 
 
 
