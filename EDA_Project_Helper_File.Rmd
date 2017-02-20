@@ -14,18 +14,18 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 
+#load in the dataset
 loan_df <- read.csv('prosperLoanData.csv')
+
 names(loan_df)
 ```
 
 ```{r}
 head(loan_df)
-
 ```
 
-
 ```{r}
-#subset data
+#subset data to the variables of interest
 loan_df_subset <- subset(loan_df, select = c('ListingNumber', 'ListingCreationDate', 'CreditGrade', 'ProsperRating..Alpha.',
                                              'Term', 'LoanStatus', 'ClosedDate', 'BorrowerAPR', 'BorrowerRate', 'LenderYield',
                                              'ProsperScore', 'Occupation', 'EmploymentStatus', 'CreditScoreRangeLower',
@@ -36,11 +36,12 @@ head(loan_df_subset)
 ```
 
 ```{r}
-#write subsetted data.frame to a new csv to only work for 
+#write subsetted data.frame to a new csv to work from in the main project 
 write.csv(loan_df_subset, file = 'loan_df_subset.csv')
 ```
 
 ```{r}
+#general exploratory plot
 ggplot(aes(x=Term), data = loan_df_subset) +
     geom_histogram()
 
@@ -53,6 +54,7 @@ head(loan_df_subset)
 
 
 ```{r fig.height = 5, fig.width = 7}
+#testing different parameters
 ggplot(aes(x=LoanStatus), data = loan_df_subset) +
     geom_bar() +
     #rotate x axis labels 90 degrees
