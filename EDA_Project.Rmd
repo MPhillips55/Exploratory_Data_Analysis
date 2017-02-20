@@ -32,7 +32,7 @@ dim(loan_df_subset)
 str(loan_df_subset)
 ```
 
-> Our dataset contains 21 variables (plus an index, labeled 'X'), and 113,937 observations.
+> Our dataset contains 23 variables (plus an index, labeled 'X'), and 113,937 observations.
 
 ```{r echo=FALSE, message=FALSE,warning=FALSE}
 ggplot(aes(x = EmploymentStatus), data = subset(loan_df_subset, !is.na(EmploymentStatus))) +
@@ -59,7 +59,7 @@ ggplot(aes(x = IncomeRange), data = loan_df_subset) +
     xlab("Income Range")
 ```
 
-> This chart shows a concentration around $50,000, which is very close to the median household income estimated by the Federal Reserve fo 2015. For a bit more detail, lets look at some descriptive statistics for the variable, "StatedMonthlyIncome".
+> This chart shows a concentration around $50,000, which is very close to the median household income estimated by the Federal Reserve for 2015. For a bit more detail, lets look at some descriptive statistics for the variable, "StatedMonthlyIncome".
 
 ```{r echo=FALSE, message=FALSE,warning=FALSE}
 summary(loan_df_subset$StatedMonthlyIncome)
@@ -72,9 +72,10 @@ income_outlier <- subset(loan_df_subset, StatedMonthlyIncome > 1000000)
 income_outlier[, c("ListingNumber", "EmploymentStatus", "StatedMonthlyIncome"), drop = FALSE]
 ```
 
-> He or she states that they are self-employed. I suppose its not impossible for this obvious outlier to be a data entry error. Are there any other data points above $500,000?
+> He or she states that they are self-employed. I suppose its not impossible for this obvious outlier to be a valid entry. Are there any other data points above $500,000?
 
 ```{r }
+#find the number of rows in my query
 sum(loan_df_subset$StatedMonthlyIncome > 500000)
 ```
 
@@ -171,8 +172,6 @@ round(cor_loan_df, 2)
 
 > My main point of interest is which factors have the greatest impact on Borrower APR. I chose Borrower APR has my main indicator of loan rate because it is a more realistic indicator of the loan rate than Borrower Rate (which does not include fees passed along by the lending institution) or Lender Yield, which is a measure of the return a lender can reasonably expect. The correlations above show that out of the listed variables, Mean Credit Score is most closely correlated with APR, with the other variables coming in at somewhat lower correlations. 
 
-> To get an idea of how APR is distributed over time regardless of any outside variables lets look at an APR vs. Time plot. 
-
 ```{r echo=FALSE, message=FALSE,warning=FALSE}
 ggplot(aes(x = meanCreditScore, y = BorrowerAPR), data = subset(loan_df_subset, meanCreditScore > 425)) +
     geom_point() +
@@ -190,7 +189,7 @@ ggplot(aes(x = meanCreditScore, y = BorrowerAPR), data = subset(loan_df_subset, 
     ylab("Borrower APR") 
 ```
 
-> From this adjusted graph we can see a fairly concrete visualization of the downward trend between Mean Credit Score and Borrower APR. The red line represents the line of best fit for the scatterplot. An alpha of .04 was used to see where the points are concentrated, and jitter was added to introduce some noise to the data.
+> From this adjusted plot we can see a fairly concrete visualization of the downward trend between Mean Credit Score and Borrower APR. The red line represents the line of best fit for the scatterplot. An alpha of .04 was used to see where the points are concentrated, and jitter was added to introduce some noise to the data.
 
 ```{r echo=FALSE, message=FALSE,warning=FALSE}
 ggplot(aes(x = StatedMonthlyIncome, y = BorrowerAPR), data = loan_df_subset) +
@@ -227,20 +226,21 @@ ggplot(aes(x = StatedMonthlyIncome, y = BorrowerAPR), data = subset(loan_df_subs
 
 ```
 
-> I think I'll take out $0, and $10,000 also as there is an obvious concentration of data points there.
+> This plot shows clearly demarcated vertical lines at certain monthly incomes. This is likely due to the fact that loan applicants enter this amount with no clear validation, and some rounding of the figure is expected. A person might make $2,800 and round up to $3,000 for example.
+
+> We can see that the slope of the line of best fit is not as steep as from the previous graph of mean credit rating vs. Borrower APR. This aligns with the correlations at the top of the section which show that mean credit rating is more closely correlated with Borrower APR than Monthly Income is. 
+
+> The scatterplot is very noisy and while a trend is visible, it is not very clear. I think I will try a smoothed line graph to see the results more distinctly.
 
 ```{r echo=FALSE, message=FALSE,warning=FALSE}
 ggplot(aes(x = StatedMonthlyIncome, y = BorrowerAPR), data = subset(loan_df_subset, StatedMonthlyIncome < 10000 & StatedMonthlyIncome != 0)) +
-    geom_point(alpha = 0.05, color = '#F79420') +
-    geom_smooth(method = 'lm', color = 'red') +
+    geom_smooth() +
     xlab('Stated Monthly Income') +
     ylab("Borrower APR") 
 
 ```
 
-> From the above plot we can see that the slope of the line of best fit is not as steep as from the previous graph above of mean credit rating vs. Borrower APR. This aligns with the correlations at the top of the section which show that mean credit rating is more closely correlated with Borrower APR than Monthly Income is. 
-
-> This plot also shows clearly demarcated vertical lines at certain monthly incomes. This is likely due to the fact that loan applicants enter this amount with no clear validation, and some rounding of the figure is expected. A person might make $2,800 and round up to $3,000 for example.
+> That is much more clear. Some detail is lost in the process of smoothing, but the trend is now unobscured by the noisy data. As Monthly Income goes up, the Borrower APR goes down. 
 
 > For the next plot I want to look at Prosper Rating (alpha) vs. Borrower APR. Prosper Rating is a ranking of the risk associated with a borrower. 'AA' is the ranking for the lowest risk, while 'HR' represents the highest risk. This rating was only implemented after 2009. For the purposes of this exploration, I am okay with this limitation. I am more interested in the recent trends than ones dating back to the start of the dataset, which happens to be more than a decade. For the purposes of the below plot, I will omit 'NA' values. 
 
@@ -254,7 +254,7 @@ ggplot(aes(x = ProsperRating..Alpha., y = BorrowerAPR), data = na.omit(loan_df_s
 
 ```
 
-> From the above box plot we can see that median Borrower APR goes down as the Prosper Rating measuring loan risk goes up. There are some outliers amongst the data as would be expected. The Prosper Rating is not the only factor that goes in to assigning an APR, but it does show a relationship between the rating and eventual APR as a general rule.
+> From the above box plot we can see that median Borrower APR goes down as the Prosper Rating measuring loan risk also goes down. There are some outliers amongst the data as would be expected. The Prosper Rating is not the only factor that goes in to assigning an APR, but it does show a relationship between the rating and eventual APR as a general rule.
 
 > Next, I want to take a look at the summary statistics for the Prosper Rating.
 
@@ -279,7 +279,7 @@ ggplot(aes(x = LoanStatus, y = BorrowerAPR, fill = LoanStatus), data = subset(lo
 
 ### What are some of the relationships you observed in this part of the investigation?
 
-> I looked at how different variables related to Borrower APR. I saw clear indications of trends using both a correlation table, and plots. The most highly correlated variable with Borrower Apr was Mean Credit Score, this makes sense because it is the most complete picture of a person's credit history, and in some cases includes other variables when calculating the score (such as credit card history). I also looked at other factors including Loan Status and Prosper Rating to see if these factors had any relationship to Borrower APR.
+> I looked at how different variables related to Borrower APR. I saw clear indications of trends using both a correlation table, and plots. The most highly correlated variable with Borrower APR was Mean Credit Score, this makes sense because it is the most complete picture of a person's credit history, and in some cases includes other variables when calculating the score (such as credit card history). I also looked at other factors including Loan Status and Prosper Rating to see if these factors had any relationship to Borrower APR.
 
 ### Did you observe any interesting relationships between the other features of the dataset?
 
@@ -305,14 +305,12 @@ ggplot(aes(x = meanCreditScore, y = BorrowerAPR, color = IncomeVerifiable), data
 
 > This result is interesting. It appears that applicants with unverified income received higher interest rates. I am going to take a slight detour and look at summary statistics for each factor of Income Verifiable.
 
-
 ```{r }
 #create a new dataframe holding only the variables of interest
 income_df <- loan_df_subset %>%
     select(ListingNumber, BorrowerAPR, IncomeVerifiable)
 
-#create new dataframes to run the summary off of, one for the data points where income could be verified, 
-#and one for data poins where it could not
+#create new dataframes to run the summary off of
 income_df_true <- subset(income_df, IncomeVerifiable == 'True')
 income_df_false <- subset(income_df, IncomeVerifiable == 'False')
 
@@ -365,9 +363,67 @@ ggplot(aes(x = ProsperRating..Alpha., y = BorrowerAPR, color = ProsperRating..Al
 
 ### What were some of the relationships observed in this part of the investigation?
 
-> I looked at the Income Verifiable variable from the dataset and examined if it had any effect on APR overall. From my investigation, it did have an overall higher mean APR when income was not verified versus when it could be. This mostly fell in line with my expectations. More interesting to me as it was not at all what I expected was the Occupation plots that measured credit score, and Prosper Rating vs. Borrower APR. I think I let my prior preconceptions color my views here, and in fact hadn't used the Occupation variable at all through this investigation as I thought I knew what to results it would show. The actual data and plots were much more uniform than I had anticipated. 
+> I looked at the Income Verifiable variable from the dataset and examined if it had any effect on APR overall. From my investigation, it did have an overall higher mean APR when income was not verified versus when it could be. This mostly fell in line with my expectations. More interesting to me as it was not at all what I expected was the Occupation plots that measured credit score, and Prosper Rating vs. Borrower APR. I think I let my prior preconceptions color my views here, and in fact hadn't used the Occupation variable at all through this investigation as I thought I knew what results it would show. The actual data and plots were much more uniform than I had anticipated. 
 
+## Final Plots and Summary
 
+### Plot One
 
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+p1 <- ggplot(aes(x = BorrowerAPR), data = loan_df_subset) +
+    geom_histogram(color = '#800000', fill = '#FF3333') +
+    
+    xlab("Borrower APR")
+p2 <- ggplot(aes(x = BorrowerRate), data = loan_df_subset) +
+    geom_histogram(color = '#003300', fill = '#80FF80') +
+    xlab("Borrower Rate")
+p3 <- ggplot(aes(x = LenderYield), data = loan_df_subset) +
+    geom_histogram(color = 'blue', fill = '#99CCFF') +
+    xlab("Lender Yield")
+grid.arrange(p2, p1, p3, ncol = 1, top = 'Interest Rates Offered to Borrowers and Lenders')
+```
 
+> The above histograms show the different interest rates offered to Prosper customers and are important to understand the range of interest rates the dataset contains. Borrower Rate is the rate offered to a person requesting a loan for the principle amount only. Borrower APR is the rate offered including all applicable fees charged by the lending institution. Lender Yield is the return a person lending money can expect if the loan is paid back fully by the loan applicant. I chose to work with Borrower APR as it is the most complete picture of the actual interest rate being charged to a loan applicant.
 
+### Plot 2
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+ggplot(aes(x = meanCreditScore, y = BorrowerAPR), data = subset(loan_df_subset, meanCreditScore > 425)) +
+    scale_x_continuous(limits = c(450, 850)) +
+    #geom_line(stat= 'summary', fun.y = mean, color = 'red') +
+    geom_smooth() +
+    geom_line(stat= 'summary', fun.y = quantile, fun.args = list(probs = .1), linetype = 2, color = 'red') +
+    geom_line(stat= 'summary', fun.y = quantile, fun.args = list(probs = .9), linetype = 2, color = 'red') +
+    ggtitle("Mean Credit Score vs. Borrower APR") +
+    xlab('Mean Credit Score') +
+    ylab("Borrower APR") 
+```
+
+> This plot demonstrates the trend in the data when Mean Credit Score is plotted against Borrower APR. As credit score goes up (a person is less of a credit risk) the APR offered by Prosper goes down meaning the applicant is being offered a loan at a better rate. Because the data was somewhat noisy (the relationship is a general trend, it does not apply to everyone) I included 10% and 90% quartile lines as well, represented by the dotted red lines, so that the spread of the data would be visible too.
+
+## Plot 3
+
+```{r echo=FALSE, message=FALSE,warning=FALSE}
+ggplot(aes(x = ProsperRating..Alpha., y = BorrowerAPR, color = ProsperRating..Alpha.), data = subset(occupation_df, 
+                                                                      meanCreditScore > 425 & !is.na(ProsperRating..Alpha.))) +
+    geom_point(alpha = 0.5, position = 'jitter') +
+    geom_smooth(aes(group = Occupation), method = 'lm', color = 'blue') +
+    facet_wrap(~ Occupation) +
+    ggtitle("Proser Rating (Alpha) vs. Borrower APR by Occupation") +
+    xlab('Prosper Rating') +
+    ylab("Borrower APR")
+```
+
+> The distribution of APR by Prosper Rating is roughly equal when separated by sample Occupations. The slope of the regression line is perhaps slightly less steep for Waiters and Waitresses, signifying a slightly higher overall APR given to this group. 
+
+## Reflection
+
+> The Prosper Loans dataset examined in this analysis contains 113,937 observations across 23 variables. My first step was to find which variables I wanted to examine in more detail. Beginning with the univariate section I began to examine what data the variables contained, eventually deciding I wanted to look at which variables impacted the Borrower APR. 
+
+> I discovered that many of the variables contained within the dataset could be seen to correlate with Borrower APR. Although, I did find it surprising that the correlation was not as strong as I might have imagined in many cases. One of the points that I consider a success would be the strong correlation between Mean Credit Score and Borrower APR. This seemed to make sense to me as many of the other variables (credit card information and debt load to name two) are considered when assigning a credit score to a person. One of the main difficulties in working with this data was just the sheer breadth of it. I had to make some hard choices on what to use and what to cut out, and I think this was one of the weaknesses of my exploration.
+
+> There are two areas that I would like to explore further. 1) The other occupations. There were a total of 68 in the dataset, too many to work with in an exploratory manner. I think exploring the others might reveal additional insights related to a possible correlation between occupation and interest rates. 2) The other variables contained in the full dataset, which has about 60 additional variables that were not examined in this exploration. I pulled out the ones that looked most interesting to me from the start. Now that I have had a chance to explore the data I would like to go back and see what I might have missed.
+
+> In a big picture view, the most important discovery I made while completing this analysis is to try to minimize the effects of my preconceptions while working with a dataset. I had some ideas coming into the project about what information the data would have, and was surprised more than a few times while viewing the plots of how my preconceptions were wildly off. This circumstance is illustrated by my reluctance to work with the Occupation variable. I made an assumption that I knew what data it held, but when I actually started working with it I was surprised again and again by what I found. 
+
+> I've always believed that the data should speak for itself, and I learned in this project that it is important to let it do so. 
