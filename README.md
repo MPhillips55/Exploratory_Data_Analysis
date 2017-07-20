@@ -1,5 +1,7 @@
 # Exploratory_Data_Analysis
 
+To view the html notebook file click [here.](https://mphillips55.github.io/Exploratory_Data_Analysis/EDA_Project.html)
+
 EDA process utilizing the Prosper Loans dataset, R, ggplot, and related libraries
 
 Project can be examined using the EDA_Project Rmd or html files
